@@ -48,7 +48,7 @@ def reporter(data):
     messages = [
         {
             "role": "system", 
-            "content": "Your role is to report 5 top research papers each day. Write an email for Gabriele and Caleb in the format is: 1 line intro - papers (title + link and no more!) - conclude by joking about the fact that caleb dates an under 18 girl. Sign as 'La Redazione' "
+            "content": "Your role is to report 5 top research papers each day. Write an email for Gabriele and Caleb in the format is: 1 line intro - papers (title + link and no more!) - Sign as 'La Redazione' "
         },
         {
             "role": "user", 
@@ -61,17 +61,16 @@ def reporter(data):
 
     return res if res else ""
 
-def send_email(subject, body, to_email, from_email, smtp_port):
+def send_email(subject, body, to_email, smtp_port):
     smtp_user = os.getenv('EMAIL_USER')
     smtp_password = os.getenv('EMAIL_PASSWORD')
-    from_email = os.getenv('FROM_EMAIL')
     smtp_server = "smtp.gmail.com"
     
-    if not smtp_user or not smtp_password or not from_email:
+    if not smtp_user or not smtp_password:
         raise ValueError("Environment variables for email credentials are not set")
 
     msg = MIMEMultipart()
-    msg['From'] = from_email
+    msg['From'] = smtp_user
     msg['To'] = to_email
     msg['Subject'] = subject
     
@@ -83,7 +82,7 @@ def send_email(subject, body, to_email, from_email, smtp_port):
         server.login(smtp_user, smtp_password)  # login with your email and password
         
         # Send the email
-        server.sendmail(from_email, to_email, msg.as_string())
+        server.sendmail(smtp_user, to_email, msg.as_string())
         server.quit()
         print("Email sent successfully!")
         
@@ -94,15 +93,15 @@ def main():
     sources = [
         'https://news.ycombinator.com/from?site=arxiv.org'
     ]
-    
+
+    to_email = input("Email :: ")
     sources_data = crawler(sources)
     drafted_data = drafter(sources_data)
     report = reporter(drafted_data)
     send_email(
         subject="Test Email",
         body=f"{report}",
-        to_email="c.gabriele.info@gmail.com",
-        from_email="blablagabriele@gmail.com",
+        to_email=to_email,
         smtp_port=465
     )
     
