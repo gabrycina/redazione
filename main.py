@@ -1,7 +1,4 @@
-import requests
-from typing import List
 from dotenv import load_dotenv
-import openai
 import os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
