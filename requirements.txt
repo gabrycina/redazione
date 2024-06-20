@@ -1,3 +1,5 @@
 openai
+secure-smtplib
 requests
 python-dotenv
+
