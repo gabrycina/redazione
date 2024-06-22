@@ -23,7 +23,7 @@ class EmailNotifier:
         msg["From"] = self.smpt_user
         msg["To"] = to_email
         msg["Subject"] = subject if subject else self.default_subject
-        msg.attach(MIMEText(body, "plain"))
+        msg.attach(MIMEText(body, "html"))
 
         try:
             server = smtplib.SMTP_SSL(self.smpt_server, self.smpt_port)

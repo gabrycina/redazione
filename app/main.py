@@ -26,7 +26,8 @@ def redact(user):
         input=sources,
         context={
             "drafter": user.drafter_prompt + ": {}",
-            "reporter": "Here's today papers, write the newsletter: {}",
+            "summarizer": "Here's the article: {}",
+            "reporter": "Here's today's articles selection, write the newsletter: {}",
         },
     )
     email_notifier.notify(body=report, to_email=user.email)
