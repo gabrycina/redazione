@@ -64,12 +64,12 @@ def get_basic_pipeline(api_key):
     crawler = Crawler()
     drafter = Agent(
         api_key=api_key,
-        system_prompt="Your role is to select and rank articles that mention research papers. Output them in format title, link. The link must be an arxiv link or any website for scientific papers",
+        system_prompt="Your role is to select and rank articles based on user preferences. Output them in format: title - link.",
         agent_role="drafter"
     )
     reporter = Agent(
         api_key=api_key,
-        system_prompt="Your role is to report 5 top research papers each day. Write an email for Gabriele and Caleb in the format is: 1 line intro - papers (title + link and no more!) - Sign as 'La Redazione' ",
+        system_prompt="Your role is to report 5 top articles each day. Write an email, the format is: 1 line intro - papers (title + link and no more!) - Sign as 'La Redazione' ",
         agent_role="reporter"
     )
     return Pipeline([crawler, drafter, reporter])
