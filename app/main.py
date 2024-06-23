@@ -1,8 +1,8 @@
 import os
-import asyncio
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.db import get_db, Base, engine
 from app.models import User
@@ -19,6 +19,18 @@ pipeline = get_basic_pipeline(API_KEY)
 email_notifier = EmailNotifier(SMTP_USER, SMTP_PASSWORD)
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
+
+origins = [
+    "http://localhost:5173",  # React app origin
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def redact(user):
     sources = user.sources.split("|")
