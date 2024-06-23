@@ -32,6 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 def redact(user):
     sources = user.sources.split("|")
     report = pipeline.run(
@@ -44,14 +45,17 @@ def redact(user):
     )
     email_notifier.notify(body=report, to_email=user.email)
 
-@app.get("/send_email/{id}")
-async def send_email(id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)) -> BasicResponse:
-    user = db.query(User).filter(User.id == id).one()
+
+@app.get("/send_email/{user_id}")
+async def send_email(
+    user_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)
+) -> BasicResponse:
+    user = db.query(User).filter(User.id == user_id).one()
     background_tasks.add_task(redact, user)
     return BasicResponse(msg="ok")
 
 
-@app.post("/register/")
+@app.post("/users/")
 async def register(user: UserPost, db: Session = Depends(get_db)) -> BasicResponse:
     user_db = User(**user.model_dump())
     db.add(user_db)
@@ -66,13 +70,24 @@ async def get_all_users(db: Session = Depends(get_db)) -> list[UserResponse]:
     users = db.query(User).all()
     return list(users)
 
+
 @app.put("/users/{user_id}/")
-async def update_user(user_id:int, user: UserUpdate,db: Session = Depends(get_db)) -> BasicResponse:
+async def update_user(
+    user_id: int, user: UserUpdate, db: Session = Depends(get_db)
+) -> BasicResponse:
     user_db = db.query(User).filter(User.id == user_id).one()
     for var, value in vars(user).items():
         if value:
-            setattr(user_db, var, value) 
+            setattr(user_db, var, value)
     db.add(user_db)
     db.commit()
     db.refresh(user_db)
+    return BasicResponse(msg="ok")
+
+
+@app.delete("/users/{user_id}")
+async def delete_user(user_id: int, db: Session = Depends(get_db)) -> BasicResponse:
+    user_db = db.query(User).filter(User.id == user_id).one()
+    db.delete(user_db)
+    db.commit()
     return BasicResponse(msg="ok")
