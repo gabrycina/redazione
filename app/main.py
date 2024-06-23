@@ -22,7 +22,8 @@ app = FastAPI()
 
 origins = [
     "http://localhost:5173",  # React app origin
-    "redact.lofipapers.com"
+    "http://redact.lofipapers.com",
+    "https://redact.lofipapers.com",
 ]
 
 app.add_middleware(
