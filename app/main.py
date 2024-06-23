@@ -73,7 +73,7 @@ async def get_all_users(db: Session = Depends(get_db)) -> list[UserResponse]:
     return list(users)
 
 
-@app.put("/users/{user_id}/")
+@app.put("/users/{user_id}")
 async def update_user(
     user_id: int, user: UserUpdate, db: Session = Depends(get_db)
 ) -> BasicResponse:
