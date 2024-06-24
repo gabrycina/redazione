@@ -29,3 +29,4 @@ jobs:
           file: ./Dockerfile
           platforms: linux/arm64
           push: true
+          tags: ghcr.io/redazione:latest
