@@ -1,6 +1,6 @@
-openai
-secure-smtplib
-requests
-python-dotenv
-fastapi
-sqlalchemy
+openai==1.35.1
+secure-smtplib==0.1.1
+requests==2.32.3
+python-dotenv==1.0.1
+fastapi==0.111.0
+sqlalchemy==2.0.31
