@@ -30,3 +30,5 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: ghcr.io/redazione:latest
+          cache-from: type=registry,ref=ghcr.io/redazione:cache
+          cache-to: mode=max,image-manifest=true,oci-mediatypes=true,type=registry,ref=ghcr.io/redazione:cache
