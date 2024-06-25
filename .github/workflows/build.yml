@@ -1,7 +1,7 @@
 name: Build flake
 
 on:
-  push:
+  workflow_dispatch:
 
 jobs:
   build:
