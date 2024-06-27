@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.db import get_db, Base, engine
 from app.models import User
 from app.schemas import BasicResponse, UserPost, UserResponse, UserUpdate
-from app.core import get_basic_pipeline
+from app.core import get_basic_pipeline, Crawler2
 from app.notify import EmailNotifier
 
 load_dotenv()
@@ -36,6 +36,9 @@ app.add_middleware(
 
 
 def redact(user):
+    # TODO add check for None in sources
+    if not user.sources:
+        return
     sources = user.sources.split("|")
     report = pipeline.run(
         input=sources,

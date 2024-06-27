@@ -1,7 +1,14 @@
-import os
 import openai
 import requests
 import json
+from bs4 import BeautifulSoup
+
+from app.prompts import (
+    DRAFTER_SYSTEM_PROMPT,
+    SUMMARIZER_SYSTEM_PROMPT,
+    REPORTER_SYSTEM_PROMPT,
+)
+
 
 class Worker:
     def __init__(self):
@@ -25,53 +32,104 @@ class Agent(Worker):
             messages=[
                 {"role": "system", "content": self.system_prompt},
                 {"role": "user", "content": context[self.agent_role].format(input)},
-            ]
+            ],
         )
         res = data.choices[0].message.content
         return res if res else ""
 
 
-class Crawler(Worker):
+class Crawler2(Worker):
     def __init__(self):
         super().__init__()
 
     def do(self, input, context):
         res = []
         for source in input:
-            try:
-                response = requests.get(source)
-                response.raise_for_status()  # Raise an error for bad status codes
-                data = response.text
-                res.append(data)
+            response = requests.get(source)
+            if response.status_code != 200:
+                print(f"Failed to fetch the URL: {source}")
+                continue
 
-            except requests.exceptions.RequestException as e:
-                print(f"An error occurred while crawling {source}: {e}")
-
+            soup = BeautifulSoup(response.content, "html.parser")
+            links = soup.find_all("a")
+            res.append(
+                {
+                    "source": source,
+                    "data": {
+                        link.get_text(strip=True): link.get("href")
+                        for link in links
+                        if len(link.get_text(strip=True)) > 10
+                    },
+                }
+            )
         return res
 
-class BatchSummarizer(Worker):
-    def __init__(self):
+
+class Drafter(Worker):
+    def __init__(self, api_key):
         super().__init__()
+        self.api_key = api_key
 
     def do(self, input, context):
-        articles = json.loads(input)
-        summarizer = Agent(
-            api_key=os.getenv("OPENAI_API_KEY"),
-            system_prompt="Your role is to summarize the key findings from this article in maximum 50 words",
-            agent_role="summarizer"
+        agent = Agent(
+            api_key=self.api_key,
+            system_prompt=DRAFTER_SYSTEM_PROMPT,
+            agent_role="drafter",
         )
 
-        for article in articles:
+        for source_data in input:
+            # TODO provare a fare ricostruire il link relativo all LLM
+            # passare tutto source_data e non solo "data"
+            ranked_data = agent.do(source_data["data"], context=context)
+
             try:
-                response = requests.get("https://r.jina.ai/" + article['link'])
-                response.raise_for_status()  # Raise an error for bad status codes
-                data = response.text
-                article['summary'] = summarizer.do(data, context)
+                ranked_data = json.loads(ranked_data)
+            except Exception as e:
+                print(f"Exception in Drafter {e} --- data that caused error {ranked_data}")
+                continue
 
-            except requests.exceptions.RequestException as e:
-                print(f"An error occurred while crawling {article['link']}: {e}")
+            try:
+                source_data["data"] = [
+                    {"title": article_title, "url": source_data["data"][article_title]}
+                    for article_title in ranked_data
+                ]
+            except Exception as e:
+                print(f"Exception in Drafter {e} -- context {source_data} ")
+                continue
 
-        return articles
+        return input
+
+
+class BatchSummarizer(Worker):
+    def __init__(self, api_key):
+        super().__init__()
+        self.api_key = api_key
+
+    def do(self, input, context):
+        summarizer = Agent(
+            api_key=self.api_key,
+            system_prompt=SUMMARIZER_SYSTEM_PROMPT,
+            agent_role="summarizer",
+        )
+
+        for source in input:
+            for article in source["data"]:
+                try:
+                    response = requests.get("https://r.jina.ai/" + article["url"])
+                    response.raise_for_status()
+                except Exception as e:
+                    print(f"Exception in summarizer {e} -- data that caused error {article['url']}")
+                    continue
+
+                try:
+                    data = response.text
+                    article["summary"] = summarizer.do(data, context)
+                except Exception as e:
+                    print(f"Exception in summarizer {e} -- len of data that caused error {len(data)}")
+                    continue
+
+        return input
+
 
 class Pipeline:
     def __init__(self, workers):
@@ -85,16 +143,12 @@ class Pipeline:
 
 
 def get_basic_pipeline(api_key):
-    crawler = Crawler()
-    drafter = Agent(
-        api_key=api_key,
-        system_prompt="Your role is to select and do your own ranking for articles based on user preferences. Output them as a json array containing objects leaving summary as empty string. Example: [{\"title\": \"example title\", \"link\": \"example link\", \"summary\": \"\"}, ...]. DONT ANSWER IN MARKDOWN. JUST WRITE THE JSON.",
-        agent_role="drafter"
-    )
-    batch_summarizer = BatchSummarizer()
+    crawler = Crawler2()
+    drafter = Drafter(api_key=api_key)
+    batch_summarizer = BatchSummarizer(api_key=api_key)
     reporter = Agent(
         api_key=api_key,
-        system_prompt="Your role is to report 5 top articles each day. Write an email in HTML. The format is: [1 line intro] - for each article: title ALWAYS WITH CLICKABLE link, summary. Make it readable and beautiful. DONT WRITE IN MARKDOWN. Sign as 'Redact 🚀'.",
-        agent_role="reporter"
+        system_prompt=REPORTER_SYSTEM_PROMPT,
+        agent_role="reporter",
     )
     return Pipeline([crawler, drafter, batch_summarizer, reporter])
