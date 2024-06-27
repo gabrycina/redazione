@@ -13,10 +13,11 @@
   }:
     flake-parts.lib.mkFlake {inherit inputs;} {
       systems = nixpkgs.lib.systems.flakeExposed;
-      imports = [inputs.devenv.flakeModule];
+      imports = [inputs.devenv.flakeModule inputs.flake-parts.flakeModules.easyOverlay];
       perSystem = {
         pkgs,
         lib,
+        config,
         ...
       }: let
         inherit (poetry2nix.lib.mkPoetry2Nix {inherit pkgs;}) mkPoetryApplication;
@@ -40,6 +41,9 @@
           ${app.dependencyEnv}/bin/uvicorn "$@" app.main:app
         '';
       in {
+        overlayAttrs = {
+          inherit (config.packages) default;
+        };
         packages.default = app;
         apps.default = {
           type = "app";
