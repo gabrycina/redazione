@@ -23,6 +23,7 @@
         inherit (poetry2nix.lib.mkPoetry2Nix {inherit pkgs;}) defaultPoetryOverrides;
         app = mkPoetryApplication {
           projectDir = lib.cleanSource ./.;
+          preferWheels = true;
           overrides =
             defaultPoetryOverrides.extend
             (_self: super: {

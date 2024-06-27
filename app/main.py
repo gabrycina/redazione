@@ -12,11 +12,10 @@ from app.notify import EmailNotifier
 
 load_dotenv()
 API_KEY = os.getenv("OPENAI_API_KEY")
-SMTP_USER = os.getenv("EMAIL_USER")
-SMTP_PASSWORD = os.getenv("EMAIL_PASSWORD")
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 
 pipeline = get_basic_pipeline(API_KEY)
-email_notifier = EmailNotifier(SMTP_USER, SMTP_PASSWORD)
+email_notifier = EmailNotifier(RESEND_API_KEY)
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
