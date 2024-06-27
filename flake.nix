@@ -42,9 +42,10 @@
         '';
       in {
         overlayAttrs = {
-          inherit (config.packages) default;
+          inherit (config.packages) redazione;
         };
         packages.default = app;
+        packages.redazione = app;
         apps.default = {
           type = "app";
           program = script;
