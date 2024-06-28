@@ -1,4 +1,7 @@
 import resend
+import logging
+
+logger = logging.getLogger(__name__)
 
 class EmailNotifier:
     def __init__(
@@ -20,6 +23,6 @@ class EmailNotifier:
 
         try:
             email: resend.Email = resend.Emails.send(params)
-            print(f"Email sent successfully to {to_email}")
+            logging.info(f"Email sent successfully to {to_email}")
         except Exception as e:
-            print(f"Failed to send email: {e}")
+            logging.error(f"Failed to sent email to {to_email} -- {e}")

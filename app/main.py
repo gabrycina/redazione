@@ -1,4 +1,5 @@
 import os
+import logging
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
@@ -9,6 +10,9 @@ from app.models import User
 from app.schemas import BasicResponse, UserPost, UserResponse, UserUpdate
 from app.core import get_basic_pipeline, Crawler2
 from app.notify import EmailNotifier
+
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 API_KEY = os.getenv("OPENAI_API_KEY")
@@ -35,18 +39,24 @@ app.add_middleware(
 
 
 def redact(user):
-    # TODO add check for None in sources
-    if not user.sources:
+    if not user.sources or not user.drafter_prompt:
+        logging.warning(f"Attempted to send email to user not intialized {user.email}")
         return
+
     sources = user.sources.split("|")
-    report = pipeline.run(
-        input=sources,
-        context={
-            "drafter": user.drafter_prompt + ": {}",
-            "summarizer": "Here's the article: {}",
-            "reporter": "Here's today's articles selection, write the newsletter: {}",
-        },
-    )
+    try:
+        report = pipeline.run(
+            input=sources,
+            context={
+                "drafter": user.drafter_prompt + ": {}",
+                "summarizer": "Here's the article: {}",
+                "reporter": "Here's today's articles selection, write the newsletter: {}",
+            },
+        )
+    except Exception as e:
+        logging.error(f"Pipeline: error not caught {e}")
+        return
+
     email_notifier.notify(body=report, to_email=user.email)
 
 

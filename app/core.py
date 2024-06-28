@@ -1,6 +1,7 @@
 import openai
 import requests
 import json
+import logging
 from bs4 import BeautifulSoup
 
 from app.prompts import (
@@ -9,6 +10,7 @@ from app.prompts import (
     REPORTER_SYSTEM_PROMPT,
 )
 
+logger = logging.getLogger(__name__)
 
 class Worker:
     def __init__(self):
@@ -47,7 +49,7 @@ class Crawler2(Worker):
         for source in input:
             response = requests.get(source)
             if response.status_code != 200:
-                print(f"Failed to fetch the URL: {source}")
+                logging.error(f"Crawler: failed to fetch the URL: {source}")
                 continue
 
             soup = BeautifulSoup(response.content, "html.parser")
@@ -85,7 +87,7 @@ class Drafter(Worker):
             try:
                 ranked_data = json.loads(ranked_data)
             except Exception as e:
-                print(f"Exception in Drafter {e} --- data that caused error {ranked_data}")
+                logging.error(f"Drafter: {e} -- data that caused error {ranked_data}")
                 continue
 
             try:
@@ -94,7 +96,7 @@ class Drafter(Worker):
                     for article_title in ranked_data
                 ]
             except Exception as e:
-                print(f"Exception in Drafter {e} -- context {source_data} ")
+                logging.error(f"Drafter: {e} -- context {source_data} ")
                 continue
 
         return input
@@ -118,14 +120,14 @@ class BatchSummarizer(Worker):
                     response = requests.get("https://r.jina.ai/" + article["url"])
                     response.raise_for_status()
                 except Exception as e:
-                    print(f"Exception in summarizer {e} -- data that caused error {article['url']}")
+                    logging.error(f"Summarizer: {e} -- data that caused error {article['url']}")
                     continue
 
                 try:
                     data = response.text
                     article["summary"] = summarizer.do(data, context)
                 except Exception as e:
-                    print(f"Exception in summarizer {e} -- len of data that caused error {len(data)}")
+                    logging.error(f"Summarizer: {e} -- len of data that caused error {len(data)}")
                     continue
 
         return input
