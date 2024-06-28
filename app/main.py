@@ -60,7 +60,7 @@ def redact(user):
     email_notifier.notify(body=report, to_email=user.email)
 
 
-@app.get("/send_email/{user_id}")
+@app.get("/send_email/{user_id}", tags=["notication"])
 async def send_email(
     user_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)
 ) -> BasicResponse:
@@ -73,7 +73,7 @@ async def send_email(
     return BasicResponse(detail="sending email in background...")
 
 
-@app.post("/users/")
+@app.post("/users/", tags=["user"])
 async def register(user: UserPost, db: Session = Depends(get_db)) -> BasicResponse:
     try: 
         user_db = User(**user.model_dump())
@@ -86,7 +86,7 @@ async def register(user: UserPost, db: Session = Depends(get_db)) -> BasicRespon
     return BasicResponse(detail="ok")
 
 
-@app.get("/users/")
+@app.get("/users/", tags=["user"])
 async def get_all_users(db: Session = Depends(get_db)) -> list[UserResponse]:
     try:
         users = db.query(User).all()
@@ -96,7 +96,7 @@ async def get_all_users(db: Session = Depends(get_db)) -> list[UserResponse]:
     return list(users)
 
 
-@app.put("/users/{user_id}")
+@app.put("/users/{user_id}", tags=["user"])
 async def update_user(
     user_id: int, user: UserUpdate, db: Session = Depends(get_db)
 ) -> BasicResponse:
@@ -114,7 +114,7 @@ async def update_user(
     return BasicResponse(detail="ok")
 
 
-@app.delete("/users/{user_id}")
+@app.delete("/users/{user_id}", tags=["user"])
 async def delete_user(user_id: int, db: Session = Depends(get_db)) -> BasicResponse:
     try:
         user_db = db.query(User).filter(User.id == user_id).one()
