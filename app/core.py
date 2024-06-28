@@ -49,7 +49,7 @@ class Crawler2(Worker):
         for source in input:
             response = requests.get(source)
             if response.status_code != 200:
-                logging.error(f"Crawler: failed to fetch the URL: {source}")
+                logging.error(f"Crawler: failed to fetch the URL: {source}, with status code {response.status_code}")
                 continue
 
             soup = BeautifulSoup(response.content, "html.parser")
