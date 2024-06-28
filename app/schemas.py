@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 
 class BasicResponse(BaseModel):
-    msg: str
+    detail: str
 
 
 class UserPost(BaseModel):

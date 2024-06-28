@@ -70,7 +70,7 @@ async def send_email(
         logging.error(f"send_email: {e}")
         raise HTTPException(status_code=404, detail="User not found")
     background_tasks.add_task(redact, user)
-    return BasicResponse(msg="sending email in background...")
+    return BasicResponse(detail="sending email in background...")
 
 
 @app.post("/users/")
@@ -83,7 +83,7 @@ async def register(user: UserPost, db: Session = Depends(get_db)) -> BasicRespon
     except Exception as e:
         logging.error(f"Register: {e}")
         raise HTTPException(status_code=404, detail="an error occurred")
-    return BasicResponse(msg="ok")
+    return BasicResponse(detail="ok")
 
 
 @app.get("/users/")
@@ -111,7 +111,7 @@ async def update_user(
     except Exception as e:
         logging.error(f"get_all_users: {e}")
         raise HTTPException(status_code=404, detail="an error occurred")
-    return BasicResponse(msg="ok")
+    return BasicResponse(detail="ok")
 
 
 @app.delete("/users/{user_id}")
@@ -123,4 +123,4 @@ async def delete_user(user_id: int, db: Session = Depends(get_db)) -> BasicRespo
     except Exception as e:
         logging.error(f"delete_user: {e}")
         raise HTTPException(status_code=404, detail="an error occurred")
-    return BasicResponse(msg="ok")
+    return BasicResponse(detail="ok")
