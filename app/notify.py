@@ -22,7 +22,7 @@ class EmailNotifier:
         }
 
         try:
-            email: resend.Email = resend.Emails.send(params)
-            logging.info(f"Email sent successfully to {to_email}")
+            resend.Emails.send(params)
+            logger.info(f"Email sent successfully to {to_email}")
         except Exception as e:
-            logging.error(f"Failed to sent email to {to_email} -- {e}")
+            logger.error(f"Failed to sent email to {to_email} -- {e}")

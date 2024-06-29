@@ -40,7 +40,7 @@ app.add_middleware(
 
 def redact(user):
     if not user.sources or not user.drafter_prompt:
-        logging.warning(f"Attempted to send email to user not intialized {user.email}")
+        logger.warning(f"Attempted to send email to user not intialized {user.email}")
         return
 
     sources = user.sources.split("|")
@@ -54,7 +54,7 @@ def redact(user):
             },
         )
     except Exception as e:
-        logging.error(f"Pipeline: error not caught {e}")
+        logger.error(f"pipeline: {e}")
         return
 
     email_notifier.notify(body=report, to_email=user.email)
@@ -67,7 +67,7 @@ async def send_email(
     try:
         user = db.query(User).filter(User.id == user_id).one()
     except Exception as e:
-        logging.error(f"send_email: {e}")
+        logger.error(f"send_email: {e}")
         raise HTTPException(status_code=404, detail="User not found")
     background_tasks.add_task(redact, user)
     return BasicResponse(detail="sending email in background...")
@@ -81,7 +81,7 @@ async def register(user: UserPost, db: Session = Depends(get_db)) -> BasicRespon
         db.commit()
         db.refresh(user_db)
     except Exception as e:
-        logging.error(f"Register: {e}")
+        logger.error(f"Register: {e}")
         raise HTTPException(status_code=404, detail="an error occurred")
     return BasicResponse(detail="ok")
 
@@ -91,7 +91,7 @@ async def get_all_users(db: Session = Depends(get_db)) -> list[UserResponse]:
     try:
         users = db.query(User).all()
     except Exception as e:
-        logging.error(f"get_all_users: {e}")
+        logger.error(f"get_all_users: {e}")
         raise HTTPException(status_code=404, detail="an error occurred")
     return list(users)
 
@@ -109,7 +109,7 @@ async def update_user(
         db.commit()
         db.refresh(user_db)
     except Exception as e:
-        logging.error(f"get_all_users: {e}")
+        logger.error(f"get_all_users: {e}")
         raise HTTPException(status_code=404, detail="an error occurred")
     return BasicResponse(detail="ok")
 
@@ -121,6 +121,6 @@ async def delete_user(user_id: int, db: Session = Depends(get_db)) -> BasicRespo
         db.delete(user_db)
         db.commit()
     except Exception as e:
-        logging.error(f"delete_user: {e}")
+        logger.error(f"delete_user: {e}")
         raise HTTPException(status_code=404, detail="an error occurred")
     return BasicResponse(detail="ok")

@@ -12,6 +12,7 @@ from app.prompts import (
 
 logger = logging.getLogger(__name__)
 
+
 class Worker:
     def __init__(self):
         pass
@@ -21,35 +22,49 @@ class Worker:
 
 
 class Agent(Worker):
-    def __init__(self, api_key, system_prompt, agent_role: str, model="gpt-3.5-turbo"):
+    def __init__(self, api_key, system_prompt, agent_role: str, model="gpt-3.5-turbo", response_format=None):
         super().__init__()
         self.system_prompt = system_prompt
         self.agent_role = agent_role
         self.model = model
+        self.response_format = response_format
         self.client = openai.OpenAI(api_key=api_key)
 
     def do(self, input: str, context):
+        logger.info(f"Agent:{self.agent_role} starting...")
         data = self.client.chat.completions.create(
             model=self.model,
+            response_format=self.response_format,
             messages=[
                 {"role": "system", "content": self.system_prompt},
                 {"role": "user", "content": context[self.agent_role].format(input)},
             ],
         )
         res = data.choices[0].message.content
+
+        logger.info(f"Agent:{self.agent_role} ending...")
         return res if res else ""
 
 
 class Crawler2(Worker):
     def __init__(self):
         super().__init__()
+        self.headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
+        }
 
     def do(self, input, context):
+        logger.info("Crawler starting...")
         res = []
         for source in input:
-            response = requests.get(source)
-            if response.status_code != 200:
-                logging.error(f"Crawler: failed to fetch the URL: {source}, with status code {response.status_code}")
+            logger.info(f"Crawler requesting {source}")
+            try:
+                response = requests.get(source, headers=self.headers)
+                response.raise_for_status()
+            except Exception as e:
+                logger.error(
+                    f"crawler: {e}"
+                )
                 continue
 
             soup = BeautifulSoup(response.content, "html.parser")
@@ -64,6 +79,10 @@ class Crawler2(Worker):
                     },
                 }
             )
+
+        if len(res) == 0:
+            raise Exception("crawler didn't produce any results") 
+        logger.info("Crawler ending...")
         return res
 
 
@@ -73,21 +92,22 @@ class Drafter(Worker):
         self.api_key = api_key
 
     def do(self, input, context):
+        logger.info("Drafter starting...")
         agent = Agent(
             api_key=self.api_key,
             system_prompt=DRAFTER_SYSTEM_PROMPT,
             agent_role="drafter",
+            response_format={"type":"json_object"}
         )
 
         for source_data in input:
-            # TODO provare a fare ricostruire il link relativo all LLM
-            # passare tutto source_data e non solo "data"
+            logger.info(f"Drafter working on {source_data}")
             ranked_data = agent.do(source_data["data"], context=context)
 
             try:
                 ranked_data = json.loads(ranked_data)
             except Exception as e:
-                logging.error(f"Drafter: {e} -- data that caused error {ranked_data}")
+                logger.error(f"Drafter: {e} -- data that caused error {ranked_data}")
                 continue
 
             try:
@@ -96,9 +116,11 @@ class Drafter(Worker):
                     for article_title in ranked_data
                 ]
             except Exception as e:
-                logging.error(f"Drafter: {e} -- context {source_data} ")
+                logger.error(f"Drafter: {e} -- context {source_data} ")
                 continue
 
+
+        logger.info(f"Drafter ending...")
         return input
 
 
@@ -108,6 +130,7 @@ class BatchSummarizer(Worker):
         self.api_key = api_key
 
     def do(self, input, context):
+        logger.info(f"Summarizer starting...")
         summarizer = Agent(
             api_key=self.api_key,
             system_prompt=SUMMARIZER_SYSTEM_PROMPT,
@@ -116,20 +139,26 @@ class BatchSummarizer(Worker):
 
         for source in input:
             for article in source["data"]:
+                logger.info(f"Summarizer working on {article}")
                 try:
                     response = requests.get("https://r.jina.ai/" + article["url"])
                     response.raise_for_status()
                 except Exception as e:
-                    logging.error(f"Summarizer: {e} -- data that caused error {article['url']}")
+                    logger.error(
+                        f"summarizer: {e} -- data that caused error {article['url']}"
+                    )
                     continue
 
                 try:
                     data = response.text
                     article["summary"] = summarizer.do(data, context)
                 except Exception as e:
-                    logging.error(f"Summarizer: {e} -- len of data that caused error {len(data)}")
+                    logger.error(
+                        f"summarizer: {e} -- len of data that caused error {len(data)}"
+                    )
                     continue
 
+        logger.info(f"Summarizer ending...")
         return input
 
 
