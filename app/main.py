@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, BackgroundTasks, HTTPException
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.jobstores.memory import MemoryJobStore
 
 from app.db import get_db, Base, engine
 from app.models import User
@@ -21,8 +23,11 @@ RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 
 pipeline = get_basic_pipeline(API_KEY)
 email_notifier = EmailNotifier(RESEND_API_KEY)
+
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
+scheduler = AsyncIOScheduler(jobstores={"default": MemoryJobStore()}, timezone="Europe/London")
+scheduler.start()
 
 origins = [
     "http://localhost:5173",  # React app origin
@@ -37,6 +42,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+#@scheduler.scheduled_job('cron', day_of_week='mon-sun', hour=22, minute=24, second=0)
+def cron_job():
+    db = next(get_db())
+    users = db.query(User).all()
+    for user in users:
+        redact(user)
 
 
 def redact(user):
@@ -76,7 +89,7 @@ async def send_email(
 
 @app.post("/users/", tags=["user"])
 async def register(user: UserPost, db: Session = Depends(get_db)) -> BasicResponse:
-    try: 
+    try:
         user_db = User(**user.model_dump())
         db.add(user_db)
         db.commit()
