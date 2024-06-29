@@ -11,6 +11,7 @@ from app.prompts import (
 )
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 class Worker:
@@ -101,13 +102,13 @@ class Drafter(Worker):
         )
 
         for source_data in input:
-            logger.info(f"Drafter working on {source_data}")
+            logger.info(f"Drafter working on {source_data['source']} with data len {len(source_data['data'])}")
             ranked_data = agent.do(source_data["data"], context=context)
 
             try:
                 ranked_data = json.loads(ranked_data)
             except Exception as e:
-                logger.error(f"Drafter: {e} -- data that caused error {ranked_data}")
+                logger.error(f"drafter: {e}")
                 continue
 
             try:
@@ -116,7 +117,7 @@ class Drafter(Worker):
                     for article_title in ranked_data
                 ]
             except Exception as e:
-                logger.error(f"Drafter: {e} -- context {source_data} ")
+                logger.error(f"drafter: {e}")
                 continue
 
 
@@ -145,7 +146,7 @@ class BatchSummarizer(Worker):
                     response.raise_for_status()
                 except Exception as e:
                     logger.error(
-                        f"summarizer: {e} -- data that caused error {article['url']}"
+                        f"summarizer: {e}"
                     )
                     continue
 
@@ -154,7 +155,7 @@ class BatchSummarizer(Worker):
                     article["summary"] = summarizer.do(data, context)
                 except Exception as e:
                     logger.error(
-                        f"summarizer: {e} -- len of data that caused error {len(data)}"
+                        f"summarizer: {e}"
                     )
                     continue
 

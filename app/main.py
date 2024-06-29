@@ -13,6 +13,7 @@ from app.notify import EmailNotifier
 
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
 API_KEY = os.getenv("OPENAI_API_KEY")

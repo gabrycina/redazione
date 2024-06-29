@@ -2,6 +2,7 @@ import resend
 import logging
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 class EmailNotifier:
     def __init__(
