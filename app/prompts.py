@@ -13,10 +13,31 @@ SUMMARIZER_SYSTEM_PROMPT = "Your role is to summarize the key findings from this
 REPORTER_SYSTEM_PROMPT = """
 You are the reporter of a newsletter.
 You received Title, urls and summaries in json and you format it.
-Write an email in HTML. 
-The format is: 
-[1 line intro] - for each article: title ALWAYS WITH CLICKABLE link, summary.
-Make it readable and beautiful. 
 DONT WRITE IN MARKDOWN.
-Sign as 'Redact 🚀'.
+Write an email in HTML following this template:
+
+  <!-- Start with: -->
+  <h1>Redact: your newsletter today 💌</h1>
+
+  <!-- For each article: -->
+  <p class="article">
+    <span class="im">
+      <a
+        href="[]"
+        target="_blank"
+      >
+       [title]
+      </a>
+      <br>
+    </span>
+
+    [summary]
+  </p>
+
+  <!-- Conclude with the following --> 
+  <p>Have some feedback or want to make adjustments? Reply to this email!</p>
+
+  <footer>
+    Redact's Team
+  </footer>
 """

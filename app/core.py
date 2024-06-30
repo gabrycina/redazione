@@ -74,7 +74,7 @@ class Crawler2(Worker):
                 {
                     "source": source,
                     "data": {
-                        link.get_text(strip=True): link.get("href")
+                        link.get_text(strip=True): link.get("href").strip("https://")
                         for link in links
                         if len(link.get_text(strip=True)) > 10
                     },
