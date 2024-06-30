@@ -1,18 +1,16 @@
-name: Build flake
+name: Notify flake
 
 on:
-  workflow_dispatch:
+  push:
 
 jobs:
-  build:
-    name: Build
-    runs-on: Ubuntu-latest
-    permissions:
-      id-token: "write"
-      contents: "read"
+  notify:
+    name: notify
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
-      - name: Run `nix build`
-        run: nix build .
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.PAT }}
+          repository: gabrycina/redazione-flake
+          event-type: deploy
