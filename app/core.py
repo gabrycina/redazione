@@ -23,7 +23,14 @@ class Worker:
 
 
 class Agent(Worker):
-    def __init__(self, api_key, system_prompt, agent_role: str, model="gpt-3.5-turbo", response_format=None):
+    def __init__(
+        self,
+        api_key,
+        system_prompt,
+        agent_role: str,
+        model="gpt-3.5-turbo",
+        response_format=None,
+    ):
         super().__init__()
         self.system_prompt = system_prompt
         self.agent_role = agent_role
@@ -63,9 +70,7 @@ class Crawler2(Worker):
                 response = requests.get(source, headers=self.headers)
                 response.raise_for_status()
             except Exception as e:
-                logger.error(
-                    f"crawler: {e}"
-                )
+                logger.error(f"crawler: {e}")
                 continue
 
             soup = BeautifulSoup(response.content, "html.parser")
@@ -74,7 +79,7 @@ class Crawler2(Worker):
                 {
                     "source": source,
                     "data": {
-                        link.get_text(strip=True): link.get("href").strip("https://")
+                        link.get_text(strip=True): link.get("href")
                         for link in links
                         if len(link.get_text(strip=True)) > 10
                     },
@@ -82,7 +87,7 @@ class Crawler2(Worker):
             )
 
         if len(res) == 0:
-            raise Exception("crawler didn't produce any results") 
+            raise Exception("crawler didn't produce any results")
         logger.info("Crawler ending...")
         return res
 
@@ -92,21 +97,31 @@ class Drafter(Worker):
         super().__init__()
         self.api_key = api_key
 
+    def relative_url_handling(self, base_url, relative_url):
+        if "http://" in relative_url or "https://" in relative_url:
+            return relative_url
+        base_url = base_url[:-1] if base_url[-1] == "/" else base_url
+        relative_url = relative_url[1:] if relative_url[0] == "/" else relative_url
+        complete_url = base_url + "/" + relative_url
+        return complete_url.replace("https://", "")
+
     def do(self, input, context):
         logger.info("Drafter starting...")
         agent = Agent(
             api_key=self.api_key,
             system_prompt=DRAFTER_SYSTEM_PROMPT,
             agent_role="drafter",
-            response_format={"type":"json_object"}
+            response_format={"type": "json_object"},
         )
 
         for source_data in input:
-            logger.info(f"Drafter working on {source_data['source']} with data len {len(source_data['data'])}")
+            logger.info(
+                f"Drafter working on {source_data['source']} with data len {len(source_data['data'])}"
+            )
             ranked_data = agent.do(source_data["data"], context=context)
 
             try:
-                ranked_data = json.loads(ranked_data)
+                ranked_data = json.loads(ranked_data)["ranked_data"]
             except Exception as e:
                 logger.error(f"drafter: {e}")
                 continue
@@ -119,7 +134,6 @@ class Drafter(Worker):
             except Exception as e:
                 logger.error(f"drafter: {e}")
                 continue
-
 
         logger.info(f"Drafter ending...")
         return input
@@ -142,21 +156,19 @@ class BatchSummarizer(Worker):
             for article in source["data"]:
                 logger.info(f"Summarizer working on {article}")
                 try:
-                    response = requests.get("https://r.jina.ai/" + article["url"])
+                    response = requests.get(
+                        "https://r.jina.ai/" + article["url"].replace("https://", "")
+                    )
                     response.raise_for_status()
                 except Exception as e:
-                    logger.error(
-                        f"summarizer: {e}"
-                    )
+                    logger.error(f"summarizer: {e}")
                     continue
 
                 try:
                     data = response.text
                     article["summary"] = summarizer.do(data, context)
                 except Exception as e:
-                    logger.error(
-                        f"summarizer: {e}"
-                    )
+                    logger.error(f"summarizer: {e}")
                     continue
 
         logger.info(f"Summarizer ending...")
