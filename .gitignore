@@ -2,6 +2,7 @@
 env/
 __pycache__/
 test.db
+dev.db
 
 .direnv
 .devenv
