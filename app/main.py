@@ -10,9 +10,10 @@ from apscheduler.jobstores.memory import MemoryJobStore
 from app.db import get_db, Base, engine
 from app.models import User
 from app.schemas import BasicResponse, UserPost, UserResponse, UserUpdate
-from app.core import get_basic_pipeline, Crawler2
+from app.core import get_basic_pipeline
 from app.notify import EmailNotifier
 
+from app.constants.emails import WELCOME_EMAIL
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -97,6 +98,8 @@ async def register(user: UserPost, db: Session = Depends(get_db)) -> BasicRespon
     except Exception as e:
         logger.error(f"Register: {e}")
         raise HTTPException(status_code=404, detail="an error occurred")
+
+    email_notifier.notify(WELCOME_EMAIL, user.email)
     return BasicResponse(detail="ok")
 
 
