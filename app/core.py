@@ -3,7 +3,6 @@ import requests
 import json
 import logging
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse
 
 from app.prompts import (
     DRAFTER_SYSTEM_PROMPT,
@@ -62,13 +61,6 @@ class Crawler2(Worker):
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
         }
 
-    def normalize_link(self, base_url, relative_or_absolute_url):
-        parsed_url = urlparse(relative_or_absolute_url)
-        if parsed_url.netloc:
-            return relative_or_absolute_url
-        else:
-            return urljoin(base_url, relative_or_absolute_url)
-
     def do(self, input, context):
         logger.info("Crawler starting...")
         res = []
@@ -87,7 +79,7 @@ class Crawler2(Worker):
                 {
                     "source": source,
                     "data": {
-                        link.get_text(strip=True): self.normalize_link(source, link.get("href"))
+                        link.get_text(strip=True): link.get("href")
                         for link in links
                         if len(link.get_text(strip=True)) > 10
                     },
