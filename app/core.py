@@ -92,7 +92,9 @@ class Crawler2(Worker):
                 {
                     "source": source,
                     "data": {
-                        link.get_text(strip=True): self.normalize_link(source, link.get("href"))
+                        link.get_text(strip=True): self.normalize_link(
+                            source, link.get("href")
+                        )
                         for link in links
                         if len(link.get_text(strip=True)) > 10
                     },
@@ -109,14 +111,6 @@ class Drafter(Worker):
     def __init__(self, api_key):
         super().__init__()
         self.api_key = api_key
-
-    def relative_url_handling(self, base_url, relative_url):
-        if "http://" in relative_url or "https://" in relative_url:
-            return relative_url
-        base_url = base_url[:-1] if base_url[-1] == "/" else base_url
-        relative_url = relative_url[1:] if relative_url[0] == "/" else relative_url
-        complete_url = base_url + "/" + relative_url
-        return complete_url.replace("https://", "")
 
     def do(self, input, context):
         logger.info("Drafter starting...")
