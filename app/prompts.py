@@ -7,6 +7,7 @@ Example Output: {"ranked_data": ["title1", "title2", ...]}
 Do not select a title if the link seems incomplete or not a valid link.
 Do not select titles that look like "Terms of Conditions," "Home," or any other title that looks like a link to navigate internally to a website.
 Do not change the title in anyway, it needs to be literal.
+Answer in json
 """
 
 SUMMARIZER_SYSTEM_PROMPT = (
