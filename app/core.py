@@ -128,9 +128,11 @@ class Drafter(Worker):
             ranked_data = agent.do(source_data["data"], context=context)
 
             try:
+                print(source_data)
+                print(ranked_data)
                 ranked_data = json.loads(ranked_data)["ranked_data"]
             except Exception as e:
-                logger.error(f"drafter: {e}")
+                logger.error(f"1.drafter: {e}")
                 continue
 
             try:
@@ -139,7 +141,7 @@ class Drafter(Worker):
                     for article_title in ranked_data
                 ]
             except Exception as e:
-                logger.error(f"drafter: {e}")
+                logger.error(f"2.drafter: {e}")
                 continue
 
         logger.info(f"Drafter ending...")
