@@ -27,7 +27,9 @@ email_notifier = EmailNotifier(RESEND_API_KEY)
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
-scheduler = AsyncIOScheduler(jobstores={"default": MemoryJobStore()}, timezone="Europe/London")
+scheduler = AsyncIOScheduler(
+    jobstores={"default": MemoryJobStore()}, timezone="Europe/London"
+)
 scheduler.start()
 
 origins = [
@@ -45,7 +47,7 @@ app.add_middleware(
 )
 
 
-#@scheduler.scheduled_job('cron', day_of_week='mon-sun', hour=22, minute=24, second=0)
+@scheduler.scheduled_job("cron", day_of_week="mon-sun", hour=8, minute=30, second=0)
 def cron_job():
     db = next(get_db())
     users = db.query(User).all()
