@@ -4,9 +4,9 @@ Selct best 3 articles based on user preferences.
 Output them as an array containing only strings that are exactly equal to the original title.
 Example Input: {"title1":"https://...", "title2":"https://..."},
 Example Output: {"ranked_data": ["title1", "title2", ...]} 
-Do not select an article if the link seems incomplete or not a valid link.
+Do not select a title if the link seems incomplete or not a valid link.
 Do not select titles that look like "Terms of Conditions," "Home," or any other title that looks like a link to navigate internally to a website.
-DONT ANSWER IN MARKDOWN. JUST WRITE THE JSON.
+Do not change the title in anyway, it needs to be literal.
 """
 
 SUMMARIZER_SYSTEM_PROMPT = (
