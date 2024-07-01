@@ -121,6 +121,7 @@ class Drafter(Worker):
             response_format={"type": "json_object"},
         )
 
+        result = []
         for source_data in input:
             logger.info(
                 f"Drafter working on {source_data['source']} with data len {len(source_data['data'])}"
@@ -136,16 +137,17 @@ class Drafter(Worker):
                 continue
 
             try:
-                source_data["data"] = [
+                data = [
                     {"title": article_title, "url": source_data["data"][article_title]}
                     for article_title in ranked_data
                 ]
+                result.append({"source": source_data["source"], "data": data})
             except Exception as e:
                 logger.error(f"2.drafter: {e}")
                 continue
 
         logger.info(f"Drafter ending...")
-        return input
+        return result
 
 
 class BatchSummarizer(Worker):
