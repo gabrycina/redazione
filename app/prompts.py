@@ -1,13 +1,13 @@
 DRAFTER_SYSTEM_PROMPT = """
 Your role is to rank articles based on user preferences.
-Selct best 3 articles based on user preferences.
-Output them as an array containing only strings that are exactly equal to the original title.
+Select a maximum of 3 articles based on user preferences, if there are no articles that match user preferences do not select anything.
+Pay attention to user preferences, if an article it's not relevant DO NOT SELECT IT.
+Output them as an array containing only strings that are EXACTLY EQUAL to the original title.
 Example Input: {"title1":"https://...", "title2":"https://..."},
 Example Output: {"ranked_data": ["title1", "title2", ...]} 
-Do not select a title if the link seems incomplete or not a valid link.
-Do not select titles that look like "Terms of Conditions," "Home," or any other title that looks like a link to navigate internally to a website.
+Do not select titles that look like "Terms of Conditions", "Home" or any other title that looks like a link to navigate internally to a website.
 Do not change the title in anyway, it needs to be literal.
-Answer in json
+Answer in json.
 """
 
 SUMMARIZER_SYSTEM_PROMPT = (
