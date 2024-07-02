@@ -155,6 +155,14 @@ class BatchSummarizer(Worker):
         super().__init__()
         self.api_key = api_key
 
+    def strip_protocol(self, url: str):
+        if url.startswith("https://"):
+            return url.replace("https://", "", 1)
+        if url.startswith("http://"):
+            return url.replace("http://", "", 1)
+        logger.warn(f"Url {url} does not contain protocol")
+        return url
+
     def do(self, input, context):
         logger.info(f"Summarizer starting...")
         summarizer = Agent(
@@ -168,7 +176,7 @@ class BatchSummarizer(Worker):
                 logger.info(f"Summarizer working on {article}")
                 try:
                     response = requests.get(
-                        "https://r.jina.ai/" + article["url"].replace("https://", "")
+                        "https://r.jina.ai/" + self.strip_protocol(article["url"])
                     )
                     response.raise_for_status()
                 except Exception as e:
