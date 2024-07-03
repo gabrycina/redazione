@@ -1,20 +1,37 @@
-WELCOME_EMAIL= """<body>
-    <p>Hi Gianfranco,</p>
-    
-    <p>we know your name is not Gianfranco, but at least now we have your attention :)</p>
-    
-    <p>Welcome to Redact, your ultimate tool for streamlined and efficient information retrieval. To get you up and running, we need just <span class="highlight">✨ two quick things ✨</span> from you:</p>
-    
-    <p><strong>Sources List:</strong> Please provide us with a list of sources (just links) from which you want Redact to fetch information (as articles, news, etc...)</p>
-    
-    <p><strong>Preferences Prompt:</strong> To further refine the information Redact delivers, let us know your preferences. What type of content are you looking for? Are there specific keywords, topics, or criteria that should guide our filtering process? The more detail you provide, the better we can customize your experience.</p>
-    
-    <p>Simply reply to this email with your sources and preferences, and we’ll take it from there.</p>
-    
-    <p>Thank you for choosing Redact. We look forward to supporting your research needs!</p>
-    
-    <p>Best regards,</p>
-    
-    <p>The Redact Team<br>
-    <a href="http://redact.lofipapers.com">redact.lofipapers.com</a></p>
-</body>"""
+WELCOME_EMAIL="""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            .email-container {
+                max-width: 600px;
+                margin: 0 auto;
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+            }
+            .highlight {
+                background-color: #f0f0f0;
+                padding: 0 4px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="email-container">
+            <p>Welcome to Redact! To get started, we need just <span class="highlight">✨ two quick things ✨</span> from you. You can give us yours or pick a starter from here:
+                <a href="https://gabrycina.notion.site/Redact-Starters-a9a8a398223443ca99e4c4d0cedfa4e3">Redact Starters Configurations</a>
+            </p>
+
+            <p><strong>1. Sources List:</strong> Links to sources you want Redact to fetch information from.</p>
+            
+            <p><strong>2. Preferences Prompt:</strong> Your content preferences (keywords, topics, etc.).</p>
+            
+            <p>Simply reply to this email with your sources and preferences, and we’ll handle the rest.</p>
+            
+            <p>Best,</p>
+            
+            <p>The Redact Team 💌<br>
+            <a href="https://redact.lofipapers.com">redact.lofipapers.com</a></p>
+        </div>
+    </body>
+    </html>
+"""
