@@ -8,3 +8,4 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     drafter_prompt = Column(String, nullable=True)
     sources = Column(String, nullable=True)
+    history = Column(String, default="[]")

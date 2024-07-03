@@ -6,6 +6,8 @@ import tiktoken
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 
+from app.db import SessionLocal
+from app.models import User
 from app.prompts import (
     DRAFTER_SYSTEM_PROMPT,
     SUMMARIZER_SYSTEM_PROMPT,
@@ -106,10 +108,14 @@ class Crawler2(Worker):
             links = soup.find_all("a")
             collected_data = {"source": source, "data": {}}
             for i, link in enumerate(links):
-                collected_data["data"][i] = {
-                    "title": link.get_text(strip=True),
-                    "url": self.normalize_link(source, link.get("href")),
-                }
+                normalized_link = self.normalize_link(source, link.get("href"))
+                if normalized_link not in context["history"]:
+                    collected_data["data"][i] = {
+                        "title": link.get_text(strip=True),
+                        "url": normalized_link,
+                    }
+                else:
+                    logger.info(f"Removed {normalized_link} as it is a duplicate")
 
             res.append(collected_data)
 
@@ -125,6 +131,27 @@ class Drafter(Worker):
     def __init__(self, api_key):
         super().__init__()
         self.api_key = api_key
+
+    def update_history(self, drafter_output, context):
+        current_history = context["history"]
+        add_to_history = []
+        for source_data in drafter_output:
+            for data in source_data["data"]:
+                add_to_history.append(data["url"])
+
+        merged_history = current_history + add_to_history
+
+        try:
+            db = SessionLocal()
+            user_db = db.query(User).filter(User.id == context["user_id"]).one()
+            user_db.history = json.dumps(merged_history)
+            db.add(user_db)
+            db.commit()
+            db.refresh(user_db)
+        except Exception as e:
+            logger.error(f"Update History Failed: {e}")
+        finally:
+            db.close()
 
     def do(self, input, context):
         logger.info("Drafter starting...")
@@ -168,6 +195,7 @@ class Drafter(Worker):
             if len(data) != 0:
                 result.append({"source": source_data["source"], "data": data})
 
+        self.update_history(result, context)
         logger.info(f"Drafter ending...")
         return result
 

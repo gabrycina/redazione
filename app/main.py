@@ -1,7 +1,9 @@
 import os
 import logging
+import json
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, BackgroundTasks, HTTPException
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -68,6 +70,8 @@ def redact(user):
                 "drafter": user.drafter_prompt + ": {}",
                 "summarizer": "Here's the article: {}",
                 "reporter": "Here's today's articles selection, write the newsletter: {}",
+                "history": json.loads(user.history),
+                "user_id": user.id,
             },
         )
     except Exception as e:
@@ -142,4 +146,21 @@ async def delete_user(user_id: int, db: Session = Depends(get_db)) -> BasicRespo
     except Exception as e:
         logger.error(f"delete_user: {e}")
         raise HTTPException(status_code=404, detail="an error occurred")
+    return BasicResponse(detail="ok")
+
+
+@app.get("/migrations", tags=["database"])
+async def apply_migrations() -> BasicResponse:
+    alter_table_command = """
+        ALTER TABLE users ADD COLUMN history VARCHAR DEFAULT '[]';
+    """
+    try:
+        connection = engine.connect()
+        connection.execute(text(alter_table_command))
+    except Exception as e:
+        logger.error(f"Migrations Error: {e}")
+        raise HTTPException(status_code=404, detail=e)
+    finally:
+        connection.close()
+
     return BasicResponse(detail="ok")
