@@ -2,6 +2,7 @@ import openai
 import requests
 import json
 import logging
+import tiktoken
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 
@@ -31,6 +32,7 @@ class Agent(Worker):
         agent_role: str,
         model="gpt-3.5-turbo",
         response_format=None,
+        max_tokens=16000,
     ):
         super().__init__()
         self.system_prompt = system_prompt
@@ -38,6 +40,15 @@ class Agent(Worker):
         self.model = model
         self.response_format = response_format
         self.client = openai.OpenAI(api_key=api_key)
+        self.tokenizer = tiktoken.get_encoding("cl100k_base")
+        self.max_tokens = max_tokens
+
+    def limit_to_context_length(self, message):
+        tokens = self.tokenizer.encode(message)
+        if len(tokens) > self.max_tokens:
+            tokens = tokens[: self.max_tokens]
+            message = self.tokenizer.decode(tokens)
+        return message
 
     def do(self, input: str, context):
         logger.info(f"Agent:{self.agent_role} starting...")
@@ -46,7 +57,12 @@ class Agent(Worker):
             response_format=self.response_format,
             messages=[
                 {"role": "system", "content": self.system_prompt},
-                {"role": "user", "content": context[self.agent_role].format(input)},
+                {
+                    "role": "user",
+                    "content": self.limit_to_context_length(
+                        context[self.agent_role].format(input)
+                    ),
+                },
             ],
         )
         res = data.choices[0].message.content
@@ -88,21 +104,19 @@ class Crawler2(Worker):
 
             soup = BeautifulSoup(response.content, "html.parser")
             links = soup.find_all("a")
-            res.append(
-                {
-                    "source": source,
-                    "data": {
-                        link.get_text(strip=True): self.normalize_link(
-                            source, link.get("href")
-                        )
-                        for link in links
-                        if len(link.get_text(strip=True)) > 10
-                    },
+            collected_data = {"source": source, "data": {}}
+            for i, link in enumerate(links):
+                collected_data["data"][i] = {
+                    "title": link.get_text(strip=True),
+                    "url": self.normalize_link(source, link.get("href")),
                 }
-            )
+
+            res.append(collected_data)
 
         if len(res) == 0:
             raise Exception("crawler didn't produce any results")
+
+        logger.info(res)
         logger.info("Crawler ending...")
         return res
 
@@ -126,25 +140,33 @@ class Drafter(Worker):
             logger.info(
                 f"Drafter working on {source_data['source']} with data len {len(source_data['data'])}"
             )
-            ranked_data = agent.do(source_data["data"], context=context)
 
             try:
-                print(source_data)
-                print(ranked_data)
+                ranked_data = agent.do(source_data["data"], context=context)
+            except Exception as e:
+                logger.error(f"0.drafter: {e}")
+                continue
+
+            try:
                 ranked_data = json.loads(ranked_data)["ranked_data"]
             except Exception as e:
                 logger.error(f"1.drafter: {e}")
                 continue
 
-            try:
-                data = [
-                    {"title": article_title, "url": source_data["data"][article_title]}
-                    for article_title in ranked_data
-                ]
+            data = []
+            for id_article in ranked_data:
+                try:
+                    data.append(
+                        {
+                            "title": source_data["data"][id_article]["title"],
+                            "url": source_data["data"][id_article]["url"],
+                        }
+                    )
+                except Exception as e:
+                    logger.error(f"2.drafter: {e}")
+
+            if len(data) != 0:
                 result.append({"source": source_data["source"], "data": data})
-            except Exception as e:
-                logger.error(f"2.drafter: {e}")
-                continue
 
         logger.info(f"Drafter ending...")
         return result
