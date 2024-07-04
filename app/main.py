@@ -79,7 +79,7 @@ def redact(user):
         logger.error(f"pipeline: {e}")
         return
 
-    email_notifier.notify(subject=f"Daily Redact 📬 - {date.today().strftime("%d-%m-%Y")}" , body=report, to_email=user.email)
+    email_notifier.notify(subject=f"Daily Redact 📬 - {date.today().strftime('%d-%m-%Y')}" , body=report, to_email=user.email)
 
 
 @app.get("/send_email/{user_id}", tags=["notication"])
