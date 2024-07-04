@@ -112,7 +112,11 @@ class Crawler2(Worker):
             for i, link in enumerate(links):
                 normalized_link = self.normalize_link(source, link.get("href"))
                 title = link.get_text(strip=True)
-                if normalized_link not in context["history"] and len(title) > 15 and normalized_link not in unique_urls:
+                if (
+                    normalized_link not in context["history"]
+                    and len(title) > 15
+                    and normalized_link not in unique_urls
+                ):
                     collected_data["data"][i] = {
                         "title": title,
                         "url": normalized_link,
@@ -257,11 +261,17 @@ class Reporter(Worker):
         html_articles = []
         for source in input:
             for article in source["data"]:
-                html_articles.append(
-                    EMAIL_ARTICLE.format(
-                        article["url"], article["title"], article["summary"]
+                try:
+                    html_articles.append(
+                        EMAIL_ARTICLE.format(
+                            article["url"], article["title"], article["summary"]
+                        )
                     )
-                )
+                except Exception as e:
+                    logger.error(f"reporter: {e}")
+
+        if len(html_articles) == 0:
+            raise Exception("There are not articles")
 
         return EMAIL_BODY.format("".join(html_articles))
 
