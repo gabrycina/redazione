@@ -5,7 +5,7 @@ Please follow the instructions below step by step:
 
 1) Select a maximum of 3 articles based on user preferences, if there are no articles or forum posts that match user preferences return zero articles and forum posts.
 
-2) Check that the ones that you selected are not parts of the websites. If they are, remove them please.
+2) Check that the ones that you selected are not common sections of a website. They must be articles or posts. If they are not, remove them please.
 
 Output them as a json containing only integers that are EXACTLY EQUAL to the key of the article selected.
 
