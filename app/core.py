@@ -177,6 +177,7 @@ class Drafter(Worker):
 
             try:
                 ranked_data = json.loads(ranked_data)["ranked_data"]
+                logger.info(f"ranked_data: {ranked_data}")
             except Exception as e:
                 logger.error(f"1.drafter: {e}")
                 continue
