@@ -8,11 +8,12 @@ from urllib.parse import urljoin, urlparse
 
 from app.db import SessionLocal
 from app.models import User
-from app.prompts import (
+from app.constants.prompts import (
     DRAFTER_SYSTEM_PROMPT,
     SUMMARIZER_SYSTEM_PROMPT,
-    REPORTER_SYSTEM_PROMPT,
 )
+from app.constants.emails import EMAIL_BODY, EMAIL_ARTICLE
+
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -244,6 +245,23 @@ class BatchSummarizer(Worker):
         return input
 
 
+class Reporter(Worker):
+    def __init__(self):
+        super().__init__()
+
+    def do(self, input, context):
+        html_articles = []
+        for source in input:
+            for article in source["data"]:
+                html_articles.append(
+                    EMAIL_ARTICLE.format(
+                        article["url"], article["title"], article["summary"]
+                    )
+                )
+
+        return EMAIL_BODY.format("".join(html_articles))
+
+
 class Pipeline:
     def __init__(self, workers):
         self.workers = workers
@@ -259,9 +277,5 @@ def get_basic_pipeline(api_key):
     crawler = Crawler2()
     drafter = Drafter(api_key=api_key)
     batch_summarizer = BatchSummarizer(api_key=api_key)
-    reporter = Agent(
-        api_key=api_key,
-        system_prompt=REPORTER_SYSTEM_PROMPT,
-        agent_role="reporter",
-    )
+    reporter = Reporter()
     return Pipeline([crawler, drafter, batch_summarizer, reporter])
