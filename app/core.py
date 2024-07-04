@@ -108,13 +108,16 @@ class Crawler2(Worker):
             soup = BeautifulSoup(response.content, "html.parser")
             links = soup.find_all("a")
             collected_data = {"source": source, "data": {}}
+            unique_urls = set()
             for i, link in enumerate(links):
                 normalized_link = self.normalize_link(source, link.get("href"))
-                if normalized_link not in context["history"]:
+                title = link.get_text(strip=True)
+                if normalized_link not in context["history"] and len(title) > 15 and normalized_link not in unique_urls:
                     collected_data["data"][i] = {
-                        "title": link.get_text(strip=True),
+                        "title": title,
                         "url": normalized_link,
                     }
+                    unique_urls.add(normalized_link)
                 else:
                     logger.info(f"Removed {normalized_link} as it is a duplicate")
 

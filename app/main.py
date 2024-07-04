@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.jobstores.memory import MemoryJobStore
+from datetime import date; 
 
 from app.db import get_db, Base, engine
 from app.models import User
@@ -78,7 +79,7 @@ def redact(user):
         logger.error(f"pipeline: {e}")
         return
 
-    email_notifier.notify(body=report, to_email=user.email)
+    email_notifier.notify(subject=f"Daily Redact 📬 - {date.today().strftime('%d-%m-%Y')}" , body=report, to_email=user.email)
 
 
 @app.get("/send_email/{user_id}", tags=["notication"])
