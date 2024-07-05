@@ -50,7 +50,7 @@ app.add_middleware(
 )
 
 
-@scheduler.scheduled_job("cron", day_of_week="mon-sun", hour=8, minute=30, second=0)
+@scheduler.scheduled_job("cron", day_of_week="mon-sun", hour=9, minute=0, second=0)
 def cron_job():
     db = next(get_db())
     users = db.query(User).all()
