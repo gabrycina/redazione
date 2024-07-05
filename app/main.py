@@ -107,7 +107,7 @@ async def register(user: UserPost, db: Session = Depends(get_db)) -> BasicRespon
         logger.error(f"Register: {e}")
         raise HTTPException(status_code=404, detail="an error occurred")
 
-    email_notifier.notify(WELCOME_EMAIL, user.email)
+    email_notifier.notify(WELCOME_EMAIL, user.email, subject="last step for Redact")
     return BasicResponse(detail="ok")
 
 
