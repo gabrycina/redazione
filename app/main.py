@@ -50,7 +50,7 @@ app.add_middleware(
 )
 
 
-@scheduler.scheduled_job("cron", day_of_week="mon-sun", hour=10, minute=35, second=0)
+@scheduler.scheduled_job("cron", day_of_week="mon-sun", hour=9, minute=48, second=0)
 def cron_job():
     logger.info("Starting cron job")
     db = next(get_db())
@@ -80,7 +80,7 @@ def redact(user):
         logger.error(f"pipeline: {e}")
         return
 
-    email_notifier.notify(subject=f"Daily Redact 📬 - {date.today().strftime('%d-%m-%Y')}" , body=report, to_email=user.email)
+    email_notifier.notify(subject="Daily Redact 📬" , body=report, to_email=user.email)
 
 
 @app.get("/send_email/{user_id}", tags=["notication"])
