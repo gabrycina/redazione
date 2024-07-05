@@ -37,7 +37,7 @@
             });
         };
         script = pkgs.writeShellScriptBin "run.sh" ''
-          ${app.dependencyEnv}/bin/gunicorn --worker-class uvicorn.workers.UvicornWorker --workers $(nproc) "$@" app.main:app
+          ${app.dependencyEnv}/bin/uvicorn "$@" app.main:app
         '';
       in {
         packages.default = app;
