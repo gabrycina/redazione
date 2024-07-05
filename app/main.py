@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.jobstores.memory import MemoryJobStore
-from datetime import date; 
+from datetime import date
 
 from app.db import get_db, Base, engine
 from app.models import User
@@ -50,7 +50,7 @@ app.add_middleware(
 )
 
 
-@scheduler.scheduled_job("cron", day_of_week="mon-sun", hour=9, minute=50, second=0)
+@scheduler.scheduled_job("cron", day_of_week="mon-sun", hour=10, minute=28, second=0)
 def cron_job():
     logger.info("Starting cron job")
     db = next(get_db())
@@ -58,6 +58,7 @@ def cron_job():
     for user in users:
         redact(user)
     logger.info("Ending cron job")
+
 
 def redact(user):
     if not user.sources or not user.drafter_prompt:
@@ -80,7 +81,11 @@ def redact(user):
         logger.error(f"pipeline: {e}")
         return
 
-    email_notifier.notify(subject=f"Daily Redact 📬 - {date.today().strftime('%d-%m-%Y')}" , body=report, to_email=user.email)
+    email_notifier.notify(
+        subject=f"Daily Redact 📬 - {date.today().strftime('%d-%m-%Y')}",
+        body=report,
+        to_email=user.email,
+    )
 
 
 @app.get("/send_email/{user_id}", tags=["notication"])
@@ -107,7 +112,11 @@ async def register(user: UserPost, db: Session = Depends(get_db)) -> BasicRespon
         logger.error(f"Register: {e}")
         raise HTTPException(status_code=404, detail="an error occurred")
 
-    email_notifier.notify(WELCOME_EMAIL, user.email, subject="😬 One last step: choose your sources and preferences!")
+    email_notifier.notify(
+        WELCOME_EMAIL,
+        user.email,
+        subject="😬 One last step: choose your sources and preferences!",
+    )
     return BasicResponse(detail="ok")
 
 
