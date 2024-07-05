@@ -15,5 +15,5 @@ Example Output: {"ranked_data": [1, 4, ...]}
 """
 
 SUMMARIZER_SYSTEM_PROMPT = (
-    "Your role is to summarize the key findings from this article in maximum 50 words. If you can't summarize it write nothing."
+    "Your role is to summarize the key findings from this article in maximum 30 words. Avoid mentioning 'the article' in your summary. If you can't summarize it write nothing."
 )
