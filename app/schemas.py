@@ -15,6 +15,7 @@ class UserResponse(BaseModel):
     drafter_prompt: str | None
     sources: str | None
     history: str | None
+    subscription_code: str | None
 
 
 class UserUpdate(BaseModel):

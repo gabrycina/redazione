@@ -1,9 +1,11 @@
 import os
 import logging
 import json
+import random
+import string
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, BackgroundTasks, HTTPException
-from sqlalchemy import text
+from sqlalchemy import text, or_
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -105,6 +107,7 @@ async def send_email(
 async def register(user: UserPost, db: Session = Depends(get_db)) -> BasicResponse:
     try:
         user_db = User(**user.model_dump())
+        user_db.subscription_code = generate_random_string(8)
         db.add(user_db)
         db.commit()
         db.refresh(user_db)
@@ -112,6 +115,8 @@ async def register(user: UserPost, db: Session = Depends(get_db)) -> BasicRespon
         logger.error(f"Register: {e}")
         raise HTTPException(status_code=404, detail="an error occurred")
 
+    # TODO cambiare welcome email cosi che riporti
+    # al frotend usando user_db.subscription_code
     email_notifier.notify(
         WELCOME_EMAIL,
         user.email,
@@ -130,6 +135,27 @@ async def get_all_users(db: Session = Depends(get_db)) -> list[UserResponse]:
     return list(users)
 
 
+@app.post("/users/{subscription_code}", tags=["user"])
+async def complete_user_subscription(
+    subscritpion_code: str, user: UserUpdate, db: Session = Depends(get_db)
+) -> BasicResponse:
+    try:
+        user_db = (
+            db.query(User).filter(User.subscription_code == subscritpion_code).one()
+        )
+        for var, value in vars(user).items():
+            if value:
+                setattr(user_db, var, value)
+        user_db.subscription_code = None
+        db.add(user_db)
+        db.commit()
+        db.refresh(user_db)
+    except Exception as e:
+        logger.error(f"complete_user_subscription: {e}")
+        raise HTTPException(status_code=404, detail="an error occurred")
+    return BasicResponse(detail="ok")
+
+
 @app.put("/users/{user_id}", tags=["user"])
 async def update_user(
     user_id: int, user: UserUpdate, db: Session = Depends(get_db)
@@ -143,7 +169,7 @@ async def update_user(
         db.commit()
         db.refresh(user_db)
     except Exception as e:
-        logger.error(f"get_all_users: {e}")
+        logger.error(f"update_user: {e}")
         raise HTTPException(status_code=404, detail="an error occurred")
     return BasicResponse(detail="ok")
 
@@ -162,16 +188,42 @@ async def delete_user(user_id: int, db: Session = Depends(get_db)) -> BasicRespo
 
 @app.get("/migrations", tags=["database"])
 async def apply_migrations() -> BasicResponse:
-    alter_table_command = """
-        ALTER TABLE users ADD COLUMN history VARCHAR DEFAULT '[]';
-    """
     try:
         connection = engine.connect()
-        connection.execute(text(alter_table_command))
+        connection.execute(text("ALTER TABLE users ADD COLUMN subscription_code TEXT;"))
+        connection.execute(
+            text(
+                "CREATE UNIQUE INDEX idx_users_department ON users(subscription_code);"
+            )
+        )
     except Exception as e:
         logger.error(f"Migrations Error: {e}")
         raise HTTPException(status_code=404, detail=e)
     finally:
         connection.close()
-
+    temp_update_user()
     return BasicResponse(detail="ok")
+
+
+def temp_update_user():
+    logger.info("Starting updating non register user")
+    db = next(get_db())
+    users = (
+        db.query(User)
+        .filter(or_(User.drafter_prompt == None, User.sources == None))
+        .all()
+    )
+    for user in users:
+        try:
+            user.subscription_code = generate_random_string(8)
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        except Exception as e:
+            logger.error("Error occurred while updating user: {e}")
+
+
+def generate_random_string(length):
+    characters = string.ascii_letters + string.digits
+    random_string = "".join(random.choice(characters) for _ in range(length))
+    return random_string

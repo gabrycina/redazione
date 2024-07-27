@@ -9,3 +9,4 @@ class User(Base):
     drafter_prompt = Column(String, nullable=True)
     sources = Column(String, nullable=True)
     history = Column(String, default="[]")
+    subscription_code = Column(String, nullable=True, unique=True)
