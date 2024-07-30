@@ -52,7 +52,7 @@ app.add_middleware(
 )
 
 
-@scheduler.scheduled_job("cron", day_of_week="mon-sun", hour=10, minute=28, second=0)
+@scheduler.scheduled_job("cron", day_of_week="mon-sun", hour=10, minute=54, second=0)
 def cron_job():
     logger.info("Starting cron job")
     db = next(get_db())
