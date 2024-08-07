@@ -13,21 +13,41 @@ WELCOME_EMAIL = """
                 background-color: #f0f0f0;
                 padding: 0 4px;
             }}
+            .cta-button {{
+                display: inline-block;
+                padding: 10px 20px;
+                background-color: #f0f0f0;
+                text-decoration: none;
+                border-radius: 5px;
+                margin-top: 20px;
+                margin-bottom: 20px;
+            }}
         </style>
     </head>
     <body>
         <div class="email-container">
-            <p>Welcome to Redact! To get started, we need just <span class="highlight">✨ two quick things ✨</span> from you. You can give us yours or pick a starter from here:
-                <a href="https://gabrycina.notion.site/Redact-Starters-a9a8a398223443ca99e4c4d0cedfa4e3">Redact Starters Configurations</a>
-            </p>
-
-            <p><strong>1. Sources List:</strong> Links to sources you want Redact to fetch information from.</p>
+            <h2>Welcome to Redact!</h2>
             
-            <p><strong>2. Preferences Prompt:</strong> Your content preferences (keywords, topics, etc.).</p>
+            <p>We're excited to have you on board. To complete your Redact account setup, please follow our <span class="highlight">✨ simple onboarding ✨</span>:</p>
             
-            <p>Simply reply to this email with your sources and preferences, and we’ll handle the rest.</p>
+            <ol>
+                <li><strong>Complete Onboarding:</strong> After clicking the link, you'll be guided through a quick onboarding process where you'll:
+                    <ul>
+                        <li>Set up your <strong>Sources List</strong> (links to information sources)</li>
+                        <li>Define your <strong>Preferences Prompt</strong> (keywords, topics, etc.)</li>
+                    </ul>
+                </li>
+            </ol>
             
-            <p>Best,</p>
+            <p>Don't worry if you're not sure what to choose – we have starter configurations available during onboarding to help you get started quickly!</p>
+            
+            <a href="https://redact.lofipapers.com/signup/{subscription_code}" class="cta-button">Confirm Email & Start Onboarding</a>
+            
+            <p>This link will expire in 24 hours for security reasons. If you need a new link, please visit our website and request a new confirmation email.</p>
+            
+            <p>We're looking forward to personalizing your Redact experience!</p>
+            
+            <p>Best regards,</p>
             
             <p>The Redact Team 💌<br>
             <a href="https://redact.lofipapers.com">redact.lofipapers.com</a></p>

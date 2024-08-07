@@ -115,10 +115,10 @@ async def register(user: UserPost, db: Session = Depends(get_db)) -> BasicRespon
         logger.error(f"Register: {e}")
         raise HTTPException(status_code=404, detail="an error occurred")
 
-    # TODO cambiare welcome email cosi che riporti
-    # al frotend usando user_db.subscription_code
+    email = WELCOME_EMAIL.format(subscription_code=user_db.subscription_code)
+
     email_notifier.notify(
-        WELCOME_EMAIL,
+        email,
         user.email,
         subject="😬 One last step: choose your sources and preferences!",
     )
