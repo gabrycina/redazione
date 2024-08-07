@@ -137,11 +137,11 @@ async def get_all_users(db: Session = Depends(get_db)) -> list[UserResponse]:
 
 @app.post("/users/{subscription_code}", tags=["user"])
 async def complete_user_subscription(
-    subscritpion_code: str, user: UserUpdate, db: Session = Depends(get_db)
+    subscription_code: str, user: UserUpdate, db: Session = Depends(get_db)
 ) -> BasicResponse:
     try:
         user_db = (
-            db.query(User).filter(User.subscription_code == subscritpion_code).one()
+            db.query(User).filter(User.subscription_code == subscription_code).one()
         )
         for var, value in vars(user).items():
             if value:
